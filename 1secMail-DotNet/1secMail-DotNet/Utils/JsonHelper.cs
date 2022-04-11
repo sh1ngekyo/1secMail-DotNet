@@ -11,15 +11,19 @@ namespace OneSecEmailDotNet.Utils
 {
     public static class JsonHelper
     {
-        public static Email ParseEmail(this string content)
+        public static List<Email> ParseEmail(this string jsonContent)
         {
-            var parsed = JsonSerializer.Deserialize<List<string>>(content)[0]
-                                       .Split('@');
-            return new Email
+            var list = new List<Email>();
+            JsonSerializer.Deserialize<List<string>>(jsonContent).ForEach(email =>
             {
-                Name = parsed[0],
-                Domain = parsed[1]
-            };
+                var parsed = email.Split('@');
+                list.Add(new Email
+                {
+                    Name = parsed[0],
+                    Domain = parsed[1]
+                });
+            });
+            return list;
         }
     }
 }

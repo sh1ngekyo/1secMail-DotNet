@@ -27,20 +27,25 @@ namespace OneSecEmailDotNet.Core
 
         private readonly HttpClient client;
 
+        private readonly string _apiActionPath = $"api/v1/?action=";
+
         public async Task<Email> CreateAsync()
         {
-            using (var res = await client.GetAsync($"api/v1/?action=genRandomMailbox&count={1}"))
+            using (var res = await client.GetAsync($"{_apiActionPath}genRandomMailbox&count={1}"))
+            {
+                res.EnsureSuccessStatusCode();
+                return JsonHelper.ParseEmail(await res.Content.ReadAsStringAsync())[0];
+            }
+        }
+
+        public async Task<List<Email>> CreateAsync(uint count)
+        {
+            using (var res = await client.GetAsync($"{_apiActionPath}genRandomMailbox&count={count}"))
             {
                 res.EnsureSuccessStatusCode();
                 return JsonHelper.ParseEmail(await res.Content.ReadAsStringAsync());
             }
         }
-
-        /*
-        public async Task<List<Email>> CreateAsync(int count)
-        {
-
-        }*/
 
         public void Dispose()
         {
