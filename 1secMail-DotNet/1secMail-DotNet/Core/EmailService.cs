@@ -9,9 +9,9 @@ using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace OneSecEmailDotNet.Core
-{ 
+{
     /// <summary>
-    /// Service for managing temporary mailboxes
+    /// Service for managing temporary mailboxes.
     /// </summary>
     public sealed class EmailService : IDisposable
     {
@@ -26,19 +26,19 @@ namespace OneSecEmailDotNet.Core
             { BaseAddress = new Uri("https://www.1secmail.com") };
 
         /// <summary>
-        /// HttpClient instance
+        /// HttpClient instance.
         /// </summary>
         private readonly HttpClient _client;
 
         /// <summary>
-        /// Global API URI part
+        /// Global API URI part.
         /// </summary>
         private readonly string _apiActionPath = $"api/v1/?action=";
 
         /// <summary>
-        /// Create single mailbox
+        /// Create single mailbox.
         /// </summary>
-        /// <returns>New email(mailbox)</returns>
+        /// <returns>New email(mailbox).</returns>
         /// <exception cref="HttpRequestException"></exception>
         public async Task<Email> CreateAsync()
             => JsonHelper.ParseEmail(
@@ -48,10 +48,10 @@ namespace OneSecEmailDotNet.Core
                 .ReadAsStringAsync())[0];
 
         /// <summary>
-        /// Create list of mailboxes
+        /// Create list of mailboxes.
         /// </summary>
-        /// <param name="count">Number of emails to generate</param>
-        /// <returns>New list of emails(mailboxes)</returns>
+        /// <param name="count">Number of emails to generate.</param>
+        /// <returns>New list of emails(mailboxes).</returns>
         /// <exception cref="HttpRequestException"></exception>
         public async Task<List<Email>> CreateAsync(uint count)
             => JsonHelper.ParseEmail(
@@ -61,27 +61,44 @@ namespace OneSecEmailDotNet.Core
                 .ReadAsStringAsync());
 
         /// <summary>
-        /// Check mailbox for update. If there a new messages - add them to the list of messages
+        /// Indicates that this email contains new messages and need to be updated.
         /// </summary>
-        /// <param name="email">Mailbox to check</param>
+        /// <param name="email">Mailbox to check.</param>
+        /// <returns>true if email contains new messages, else - false.</returns>
+        public async ValueTask<bool> ContainsNewMessagesAsync(Email email)
+            => (await GetNewMessagesId(email)).Count > 0;
+
+        /// <summary>
+        /// Get list of new messages ids.
+        /// </summary>
+        /// <param name="email">Mailbox to check.</param>
+        /// <returns>New list of ids.</returns>
         /// <exception cref="HttpRequestException"></exception>
-        public async Task UpdateEmailAsync(Email email)
-            => await JsonHelper.GetAllId(
+        public async ValueTask<List<int>> GetNewMessagesId(Email email)
+            => JsonHelper.GetAllId(
                 await (await _client.GetAsync($"{_apiActionPath}getMessages&login={email.Name}&domain={email.Domain}"))
                 .EnsureSuccessStatusCode()
                 .Content
                 .ReadAsStringAsync())
             .Where(id
-                => !email.Messages.Any(message => id == message.Id))
-            .ToList()
-            .ForEachAsync(async (id)
-                => email.Messages.Add(item: await GetMessageByIdAsync(email, id)));
+                => !email.Messages.Any(message => id == message.Id)).ToList();
 
         /// <summary>
-        /// Get message by certain id
+        /// Check mailbox for update. If there a new messages - add them to the list of messages
         /// </summary>
-        /// <param name="email">Mailbox with message</param>
-        /// <param name="id">Message id</param>
+        /// <param name="email">Mailbox to check</param>
+        /// <exception cref="HttpRequestException"></exception>
+        public async Task UpdateEmailAsync(Email email)
+            => await (await GetNewMessagesId(email))
+                .ForEachAsync(async (id)
+                => email.Messages.Add(
+                    item: await GetMessageByIdAsync(email, id)));
+
+        /// <summary>
+        /// Get message by certain id.
+        /// </summary>
+        /// <param name="email">Mailbox with message.</param>
+        /// <param name="id">Message id.</param>
         /// <exception cref="HttpRequestException"></exception>
         public async Task<EmailMessage> GetMessageByIdAsync(Email email, int id)
             => JsonHelper.Parse<EmailMessage>(
@@ -91,11 +108,11 @@ namespace OneSecEmailDotNet.Core
                 .ReadAsStringAsync());
 
         /// <summary>
-        /// Download attachement into currect directory
+        /// Download attachement into currect directory.
         /// </summary>
-        /// <param name="email">Mailbox with message</param>
-        /// <param name="messageId">Message id</param>
-        /// <param name="attachmentFullName">FullName of attachment</param>
+        /// <param name="email">Mailbox with message.</param>
+        /// <param name="messageId">Message id.</param>
+        /// <param name="attachmentFullName">FullName of attachment.</param>
         /// <exception cref="HttpRequestException"></exception>
         public async Task DownloadAttachmentAsync(Email email, int messageId, string attachmentFullName)
             => await _client.DownloadFileTaskAsync(
