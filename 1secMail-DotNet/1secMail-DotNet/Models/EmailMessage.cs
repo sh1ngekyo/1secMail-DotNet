@@ -14,14 +14,16 @@ namespace OneSecEmailDotNet.Models
 
         public string Subject { get; set; }
 
-        public DateTime Date { get; set; }
+        public string Date { get; set; }
+
+        public DateTime DateTime => DateTime.Parse(Date);
 
         public string Body { get; set; }
 
-        public string BodyAsHtml { get; set; }
+        public string HtmlBody { get; set; }
 
-        public string Text { get; set; }
+        public string TextBody { get; set; }
 
-        public List<EmailAttachment> Attachments { get; set; }
+        public List<EmailAttachment> Attachments { get; set; } = new List<EmailAttachment>();
     }
 }

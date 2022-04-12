@@ -12,6 +12,6 @@ namespace OneSecEmailDotNet.Models
         public string Domain { get; set; }
         public string FullName => Name + "@" + Domain;
 
-        public IEnumerable<EmailMessage> Messages { get; set; }
+        public List<EmailMessage> Messages { get; set; }
     }
 }
