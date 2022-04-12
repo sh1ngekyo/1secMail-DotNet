@@ -20,10 +20,29 @@ namespace OneSecEmailDotNet.Utils
                 list.Add(new Email
                 {
                     Name = parsed[0],
-                    Domain = parsed[1]
+                    Domain = parsed[1],
+                    Messages = new List<EmailMessage>()
                 });
             });
             return list;
+        }
+
+        public static List<int> GetAllId(this string jsonContent)
+        {
+            var idList = new List<int>();
+            JsonDocument.Parse(jsonContent).RootElement
+                        .EnumerateArray()
+                        .ToList()
+                        .ForEach(x => idList.Add(x.GetProperty("id").GetInt32()));
+            return idList;
+        }
+
+        public static T Parse<T>(this string jsonContent)
+        {
+            return JsonSerializer.Deserialize<T>(jsonContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
         }
     }
 }
